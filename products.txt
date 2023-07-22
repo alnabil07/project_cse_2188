@@ -1,0 +1,6 @@
+1 Chocolate 40 10
+2 Bun 15 10
+3 Banana 5 20
+4 Cake 25 10
+5 Chips 15 15
+6 Soap 50 17
