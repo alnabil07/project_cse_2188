@@ -12,14 +12,15 @@ public:
     int id;
     string name;
     double price;
-    int quantity;
+    int totalQuantity;  
+    int quantityInCart;
 
-    Product(int id, const string &name, double price, int quantity)
-        : id(id), name(name), price(price), quantity(quantity) {}
+    Product(int id, const string &name, double price, int totalQuantity)
+        : id(id), name(name), price(price), totalQuantity(totalQuantity), quantityInCart(0) {}
 
     void displayProduct() const
     {
-        cout << setw(5) << id << setw(20) << name << setw(10) << price << setw(8) << quantity << endl;
+        cout << setw(5) << id << setw(20) << name << setw(10) << price << setw(8) << totalQuantity << endl;
     }
 };
 
@@ -35,6 +36,7 @@ private:
     void saveProductsToFile();
     Product *findProductById(int productId);
     void displayProductDetails(const Product &product) const;
+    void updateProductQunatity();
 
 public:
     Supermarket(const string &filename) : filename(filename)
@@ -91,7 +93,7 @@ void Supermarket::saveProductsToFile()
 
     for (const auto &product : products)
     {
-        file << product.id << " " << product.name << " " << product.price << " " << product.quantity << "\n";
+        file << product.id << " " << product.name << " " << product.price << " " << product.totalQuantity << "\n";
     }
 
     file.close();
@@ -114,7 +116,23 @@ void Supermarket::displayProductDetails(const Product &product) const
     cout << "Product ID: " << product.id << endl;
     cout << "Name: " << product.name << endl;
     cout << "Price: " << product.price << endl;
-    cout << "Available Quantity: " << product.quantity << endl;
+    cout << "Available Quantity: " << product.totalQuantity << endl;
+}
+
+void Supermarket::updateProductQunatity()
+{
+    ofstream file(filename);
+    if (!file)
+    {
+        cout << "Error opening file" << endl;
+        return;
+    }
+
+    for (const auto &product : products)
+    {
+        file << product.id << " " << product.name << " " << product.price << " " << product.totalQuantity << "\n";
+    }
+    file.close();
 }
 
 void Supermarket::addProduct()
@@ -174,7 +192,7 @@ void Supermarket::editProduct()
 
     productToEdit->name = name;
     productToEdit->price = price;
-    productToEdit->quantity = quantity;
+    productToEdit->totalQuantity = quantity;
 
     saveProductsToFile();
     cout << "Product updated successfully." << endl;
@@ -220,7 +238,7 @@ void Supermarket::browseProducts()
 
 void Supermarket::addToCart()
 {
-    int id;
+    int id, quantity;
 
     cout << "Enter Product ID to add to cart: ";
     cin >> id;
@@ -232,6 +250,16 @@ void Supermarket::addToCart()
         return;
     }
 
+    cout << "Enter Quantity to add to cart: ";
+    cin >> quantity;
+
+    if (quantity > productToAdd->totalQuantity)
+    {
+        cout << "Not enough quantity available." << endl;
+        return;
+    }
+
+    productToAdd->quantityInCart += quantity;
     cart.push_back(*productToAdd);
     cout << "Product added to cart." << endl;
 }
@@ -269,7 +297,7 @@ void Supermarket::viewCart()
     cout << "-------------------------------------------" << endl;
     for (const auto &product : cart)
     {
-        product.displayProduct();
+        cout << setw(5) << product.id << setw(20) << product.name << setw(10) << product.price << setw(8) << product.quantityInCart << endl; // Display the quantityInCart instead of totalQuantity
     }
     cout << "-------------------------------------------" << endl;
 }
@@ -286,15 +314,38 @@ void Supermarket::checkout()
     viewCart();
 
     double total = 0.0;
-    for (const auto &product : cart)
+    vector<Product> checkedProducts;
+
+    for (auto &cartProduct : cart)
     {
-        total += product.price;
+        total += cartProduct.price * cartProduct.quantityInCart;
+        Product *productInStore = findProductById(cartProduct.id);
+        if (productInStore == nullptr || productInStore->totalQuantity < cartProduct.quantityInCart)
+        {
+            cout << "Not enough quantity available for product with ID " << cartProduct.id << "." << endl;
+            return; 
+        }
+        productInStore->totalQuantity -= cartProduct.quantityInCart;
+        checkedProducts.push_back(*productInStore);
     }
 
-    cout << "-------------------------------------------" << endl;
-    cout << "Total Price: " << total << std::endl;
+    ofstream file(filename);
+    if (!file)
+    {
+        cout << "Error opening file." << endl;
+        return;
+    }
+
+    for (const auto &product : products)
+    {
+        file << product.id << " " << product.name << " " << product.price << " " << product.totalQuantity << "\n";
+    }
+
+    file.close();
 
     cart.clear();
+    cout << "-------------------------------------------" << endl;
+    cout << "Total Price: " << total << std::endl;
     cout << "Checkout completed. Thank you for shopping!" << endl;
 }
 
