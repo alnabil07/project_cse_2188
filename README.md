@@ -65,4 +65,4 @@ You can modify the `username` and `password` variables in the `main` function to
 - Email: alnimra121@gmail.com
 - GitHub Profile: [alnabil07](https://github.com/alnabil07)
 
-For any questions, issues, or suggestions, please feel free to contact the developer via the provided email or GitHub profile. Happy shopping!
+For any questions, issues, or suggestions, please feel free to contact the developer via the provided email or GitHub profile. Happy coading!
